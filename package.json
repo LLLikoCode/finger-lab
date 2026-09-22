@@ -1,0 +1,18 @@
+{
+  "name": "finger-lab",
+  "version": "0.2.0",
+  "private": true,
+  "scripts": {
+    "vendor": "node scripts/vendor.cjs",
+    "test": "playwright test",
+    "test:public": "node tests/public-smoke.cjs"
+  },
+  "dependencies": {
+    "peerjs": "1.5.5",
+    "qrcode-generator": "2.0.4"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.58.2",
+    "peer": "1.0.2"
+  }
+}

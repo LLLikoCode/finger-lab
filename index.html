@@ -36,7 +36,7 @@
     .stage::before { content:""; position:absolute; inset:0; background-image:linear-gradient(#a6c1a309 1px,transparent 1px),linear-gradient(90deg,#a6c1a309 1px,transparent 1px); background-size:36px 36px; pointer-events:none; z-index:1; }
     .stage video,.stage canvas { position:absolute; inset:0; width:100%; height:100%; }
     .stage video { object-fit:contain; opacity:0; transition:opacity .25s; background:#14201a; }
-    .stage[data-mode="live"] video { opacity:1; }
+    .stage[data-mode="live"] video,.stage[data-mode="sending"] video { opacity:1; }
     .stage video.mirrored { transform:scaleX(-1); }
     .stage canvas { z-index:2; pointer-events:none; }
     .stage-top { position:absolute; z-index:4; top:19px; left:19px; right:19px; display:flex; justify-content:space-between; gap:8px; align-items:center; }
@@ -54,6 +54,21 @@
     .spinner { border:2px solid #ffffff26; border-top-color:var(--lime); width:28px; height:28px; border-radius:50%; animation:spin 1s linear infinite; }
     @keyframes spin { to { transform:rotate(360deg); } }
     .controls { padding:18px 20px; }
+    .remote-panel { margin-bottom:20px; padding:20px; border:1px solid var(--line); border-radius:18px; background:#fff; }
+    .remote-panel h2 { margin:0; font-size:18px; }
+    .remote-panel p { font-size:12px; color:var(--muted); line-height:1.8; }
+    .remote-actions { display:flex; flex-wrap:wrap; gap:10px; align-items:center; }
+    .remote-actions select { font:inherit; max-width:100%; padding:12px; border:1px solid var(--line); border-radius:10px; background:#fff; }
+    #remote-status { margin-bottom:0; color:var(--green); }
+    #remote-status[data-error="true"] { color:#8c483a; }
+    #pairing { display:flex; flex-wrap:wrap; align-items:center; gap:20px; margin-top:16px; }
+    #pair-code { width:200px; max-width:100%; flex-shrink:0; }
+    #pair-code svg { display:block; width:100%; height:auto; }
+    .invite-fields { flex:1; min-width:180px; }
+    .invite-fields label { font-size:12px; display:block; margin-bottom:8px; }
+    #invite-link { width:100%; padding:10px; border:1px solid var(--line); border-radius:8px; margin-bottom:10px; font:12px ui-monospace,monospace; }
+    body[data-input="sender"] .metrics,body[data-input="sender"] aside,body[data-input="sender"] .settings { display:none; }
+    body[data-input="sender"] .workspace { grid-template-columns:1fr; }
     .main-controls { display:flex; gap:10px; }
     .primary { flex:1; border:0; background:var(--lime); color:#26351d; font-weight:650; border-radius:12px; min-height:49px; display:flex; align-items:center; justify-content:center; gap:10px; transition:background .2s,transform .2s; }
     .primary:hover { background:#bfea5a; }.primary:active { transform:scale(.98); }
@@ -125,6 +140,17 @@
         <div><div class="eyebrow">A LITTLE MOTION, A NEW CONNECTION</div><h1 id="page-title">让指尖，成为<em>光标。</em></h1></div>
         <p>把手放进镜头，试着移动、弯曲、捏合。<br>用一点小动作，探索新的交互方式。</p>
       </section>
+      <section class="remote-panel" aria-labelledby="remote-title">
+        <h2 id="remote-title">用手机当摄像头</h2>
+        <p id="remote-help">电脑创建连接，手机扫码并允许摄像头。视频在电脑显示并识别手指。</p>
+        <div class="remote-actions">
+          <div id="receiver-controls"><button class="secondary" id="remote-start" type="button">电脑：创建手机连接</button></div>
+          <div id="phone-controls" hidden><label for="phone-facing">手机镜头</label> <select id="phone-facing"><option value="environment">后置摄像头</option><option value="user">前置摄像头</option></select> <button class="secondary" id="phone-start" type="button">开启摄像头并发送</button></div>
+          <button class="secondary" id="remote-stop" type="button" hidden>停止连接</button>
+        </div>
+        <div id="pairing" hidden><div id="pair-code" aria-label="手机配对二维码"></div><div class="invite-fields"><label for="invite-link">手机扫码，或复制链接在手机浏览器打开</label><input id="invite-link" readonly><button class="secondary" id="copy-invite" type="button">复制手机链接</button><p>两台设备连接同一 Wi-Fi，并保持页面前台。链接仅供你自己的手机使用。</p></div></div>
+        <p id="remote-status" role="status">配对需要联网；视频直接传到电脑，不录制、不采集音频。</p>
+      </section>
       <div class="workspace">
         <section class="camera-card" aria-label="手指追踪体验">
           <div class="stage" id="stage" data-mode="idle">
@@ -143,7 +169,7 @@
             </div>
             <div class="settings"><button class="toggle" id="toggle-skeleton" type="button" aria-pressed="true">手指骨架</button><button class="toggle" id="toggle-trail" type="button" aria-pressed="true">指尖轨迹</button><button class="toggle" id="toggle-smooth" type="button" aria-pressed="true">平滑追踪</button><button class="clear" id="clear" type="button">清除轨迹 ↺</button></div>
             <div class="error" id="error" role="alert" hidden></div>
-            <p class="privacy"><svg width="12" height="14" viewBox="0 0 16 18" fill="none" stroke="currentColor" aria-hidden="true"><path d="m8 1 6 3v5c0 4-6 7-6 7S2 13 2 9V4Z"/><path d="m5 8 2 2 4-4"/></svg>画面仅在当前设备处理，不录制、不上传</p>
+            <p class="privacy" id="privacy-note">本机模式在当前设备处理；手机模式将视频直传配对电脑。不录制、不采集音频。</p>
           </div>
           <div class="metrics" aria-label="实时追踪数据"><div class="metric"><div class="metric-label">追踪帧率</div><div class="metric-value"><span id="fps">—</span><small>FPS</small></div></div><div class="metric"><div class="metric-label">单帧处理</div><div class="metric-value"><span id="latency">—</span><small>ms</small></div></div><div class="metric"><div class="metric-label">手部关键点</div><div class="metric-value"><span id="points">—</span><small>/ 21</small></div></div></div>
         </section>
@@ -157,6 +183,9 @@
     </main>
     <footer><span>FINGER LAB © 2026</span><span>MOVE A LITTLE. EXPLORE MORE.</span></footer>
   </div>
+  <script src="vendor/peerjs.min.js"></script>
+  <script src="vendor/qrcode.js"></script>
+  <script src="remote-camera.js"></script>
   <script type="module">
     const $ = id => document.getElementById(id);
     const video = $('camera'), canvas = $('overlay'), ctx = canvas.getContext('2d'), stage = $('stage');
@@ -167,15 +196,17 @@
     const labels = ['拇指','食指','中指','无名指','小指'];
     $('fingers').innerHTML = labels.map((name,i) => `<div class="finger"><span class="finger-name">${name}</span><div class="bar"><i id="bend-${i}"></i></div><span class="finger-value" id="bend-value-${i}">—</span></div>`).join('');
     const state = { mode:'idle', session:0, facing:'user', mirrored:true, stream:null, engine:null, enginePromise:null, raf:0, busy:false, lastVideoTime:-1, lastInfer:0, smoothed:null, raw:null, world:null, trail:[], pinched:false, fpsStart:0, frames:0, frameCost:0, showSkeleton:true, showTrail:true, smooth:true, uiTime:0, lastDetected:0 };
-    let width=0, height=0;
+    let width=0, height=0, remote=null;
+    state.input='local';
     const clamp = (v,min=0,max=1) => Math.min(max,Math.max(min,v));
     function status(text,kind='idle') { $('status-text').textContent=text; $('status').dataset.state=kind; }
     function error(message) { $('error').textContent=message; $('error').hidden=!message; }
     function loading(text) { $('loader').hidden=!text; $('loading-text').textContent=text; }
     function controls() {
+      document.body.dataset.input=state.input;
       const active = state.mode==='live'||state.mode==='starting';
-      $('start-label').textContent = state.mode==='starting'?'取消开启':active?'停止摄像头':'开启摄像头';
-      $('switch-camera').disabled = state.mode!=='live';
+      $('start-label').textContent = state.input!=='local'?'改用本机摄像头':state.mode==='starting'?'取消开启':active?'停止摄像头':'开启摄像头';
+      $('switch-camera').disabled = state.mode!=='live'||state.input!=='local';
       $('demo').textContent=state.mode==='demo'?'结束演示':'先看演示';
       stage.dataset.mode=state.mode;
     }
@@ -211,9 +242,13 @@
       $('bend-note').textContent=state.mode==='demo'?'演示数据 · 非摄像头识别':'0% 伸直 · 100% 弯曲 · 估计值';
     }
     function stop(message='摄像头已关闭') {
+      remote?.stop();
+      stopLocal(message);
+    }
+    function stopLocal(message='摄像头已关闭') {
       state.session++; cancelAnimationFrame(state.raf);
       if(state.stream) { state.stream.getTracks().forEach(track=>track.stop()); state.stream=null; }
-      video.pause(); video.srcObject=null; state.mode='idle'; state.busy=false; loading(''); resetTracking();
+      video.pause(); video.srcObject=null; state.mode='idle'; state.input='local'; state.busy=false; loading(''); resetTracking();
       $('source-label').textContent='示意图 · 摄像头未开启'; $('stage-hint').textContent='五根手指，一种新的可能。';
       status(message); controls(); drawIdle();
     }
@@ -421,7 +456,7 @@
       $('source-label').textContent='预设动画 · 非摄像头识别';$('stage-hint').textContent='这是效果演示，开启摄像头即可试用';
       $('points').textContent='21';state.raf=requestAnimationFrame(demoFrame);
     }
-    $('start').addEventListener('click',()=>{if(state.mode==='live'||state.mode==='starting')stop();else startCamera();});
+    $('start').addEventListener('click',()=>{if(state.input==='local'&&(state.mode==='live'||state.mode==='starting'))stop();else startCamera();});
     $('demo').addEventListener('click',()=>state.mode==='demo'?stop('演示已结束'):startDemo());
     $('switch-camera').addEventListener('click',()=>{state.facing=state.mirrored?'environment':'user';startCamera();});
     for(const [id,key] of [['toggle-skeleton','showSkeleton'],['toggle-trail','showTrail'],['toggle-smooth','smooth']]) {
@@ -430,6 +465,38 @@
     $('clear').addEventListener('click',()=>{state.trail=[];});
     document.addEventListener('visibilitychange',()=>{if(document.hidden&&state.mode!=='idle')stop('已暂停 · 点击重新开启');});
     window.addEventListener('pagehide',()=>stop());
+    remote = new window.RemoteCamera({
+      reset: () => { stopLocal('手机连接已结束'); error(''); },
+      mode: role => {
+        state.input=role; controls();
+        status(role==='receiver'?'等待手机连接':'准备发送');
+        $('source-label').textContent=role==='receiver'?'手机摄像头 · 等待连接':'手机发送端';
+      },
+      preview: async (stream,mirrored) => {
+        const session=state.session;
+        state.mirrored=mirrored; video.classList.toggle('mirrored',mirrored);
+        video.srcObject=stream;
+        await deadline(video.play(),12000,'手机预览无法播放，请重新连接。');
+        if(session!==state.session)return;
+        state.mode='sending';ctx.clearRect(0,0,width,height);controls();
+        status('手机视频预览','active');$('source-label').textContent=mirrored?'发送前置镜头 · 镜像预览':'发送后置镜头';
+        $('stage-hint').textContent='手部识别和动作反馈显示在电脑端';
+      },
+      stream: async (stream,mirrored) => {
+        const session=state.session;
+        state.stream=stream;state.mode='starting';state.mirrored=mirrored;
+        video.classList.toggle('mirrored',mirrored);video.srcObject=stream;
+        controls();loading('手机已连接，正在准备电脑识别模型…');
+        await deadline(video.play(),12000,'手机视频未能播放，请重新连接。');
+        if(session!==state.session)return;
+        await getEngine();
+        if(session!==state.session)return;
+        resetTracking();state.mode='live';state.busy=false;loading('');controls();
+        $('source-label').textContent=mirrored?'手机前置镜头 · 镜像':'手机后置镜头';
+        $('stage-hint').textContent='把完整手掌放进手机画面';status('寻找手部');
+        state.raf=requestAnimationFrame(tick);
+      }
+    });
     resize();controls();
   </script>
 </body>
