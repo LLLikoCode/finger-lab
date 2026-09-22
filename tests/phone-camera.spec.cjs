@@ -136,6 +136,7 @@ test('switch to demo while model loads cannot resume remote video', async ({brow
   await expect.poll(() => phone.page.evaluate(() => testStreams[0].getTracks()[0].readyState)).toBe('ended');
   await desktop.page.waitForTimeout(3000);
   await expect(desktop.page.locator('#stage')).toHaveAttribute('data-mode','demo');
+  await expect(desktop.page.locator('#remote-status')).toContainText('连接已结束');
   expect(await desktop.page.locator('#camera').evaluate(v => v.srcObject)).toBeNull();
   await desktop.context.close(); await phone.context.close();
 });
@@ -178,6 +179,7 @@ test('phone hidden stops capture and clears desktop video', async ({browser}) =>
     document.dispatchEvent(new Event('visibilitychange'));
   });
   expect(await phone.page.evaluate(() => testStreams[0].getTracks()[0].readyState)).toBe('ended');
+  await expect(phone.page.locator('#remote-status')).not.toContainText('正在发送');
   await expect(desktop.page.locator('#remote-stop')).toBeHidden();
   expect(await desktop.page.locator('#camera').evaluate(v => v.srcObject)).toBeNull();
   await desktop.context.close(); await phone.context.close();

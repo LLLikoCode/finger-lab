@@ -280,7 +280,7 @@
       $('invite-link').value = '';
       this.render();
       if (wasActive) this.hooks.reset();
-      if (message) this.message(message);
+      if (message || wasActive) this.message(message || '连接已结束，请在电脑重新创建连接。');
     }
   }
   window.RemoteCamera = RemoteCamera;

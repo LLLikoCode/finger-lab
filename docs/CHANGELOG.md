@@ -8,7 +8,9 @@
 - 文件：`index.html`、`remote-camera.js`、`vendor/`、`package.json`、`package-lock.json`、`scripts/vendor.cjs`、`tests/`、`playwright.config.cjs`、`.gitignore`、README 和两个 Spec。保留上次部署任务未提交的文档更新。
 - 文档：README 沿用项目结构与 Spec 索引，更新使用步骤、依赖和测试方式；不重复建立结构或索引文件。
 - 验证：10 项 Playwright 测试通过，使用真实 WebRTC + 本地信令 + 合成视频，识别采用测试替身；覆盖视频到达、镜像、错误/重复令牌、授权拒绝、异步取消、停止释放、切后台、过期、服务超时和本机回归。首次发现提前关闭拒绝通道导致对端等待，已修复并通过复验。公网检查 `npm run test:public` 使用真实公共配对服务及真实 MediaPipe，640×480 合成视频传输、无手检测和停止释放通过；电脑与 390px 手机截图已检查。JavaScript 语法、ID 唯一性、静态文件和文档相对链接检查通过。
-- 限制：手机扫码/权限/路由器互通、iOS、真实手部精度及长期性能仍待验证，不宣称性能达标；尚未发布本次功能。
+- 最终复核：修正切换到演示或切后台后连接提示残留“正在发送”的问题；新增状态断言后，2 项受影响测试通过。
+- 发布：功能提交 `0456663` 已推送至 `main`，GitHub Pages [部署成功](https://github.com/LLLikoCode/finger-lab/actions/runs/35759206589)，HTTPS 页面返回 200 并包含手机连接入口；随后补充上述状态提示修正。使用入口仍为 https://lllikocode.github.io/finger-lab/ 。
+- 限制：手机扫码/权限/路由器互通、iOS、真实手部精度及长期性能仍待验证，不宣称性能达标。
 
 ## 2026-09-22 · 开启 GitHub Pages 手机测试入口
 
